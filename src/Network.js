@@ -21,6 +21,8 @@ class Network extends AsyncEventEmitter {
     this.pending = [];
 
     opts = opts || {};
+    this.startOfBytes = opts.startOfBytes || [0x0b];
+    this.endOfBytes = opts.endOfBytes || [0x1c, 0x0d];
     this.connectTimeout = opts.connectTimeout || 3 * 60 * 1000;
     this.logMessages = opts.logMessages || false;
     this.connected = false;
@@ -105,10 +107,9 @@ class Network extends AsyncEventEmitter {
       );
 
       const hl7Bytes = new TextEncoder().encode(message.toString());
-      const startBlock = [0x0b];
-      this.socket.write(Buffer.from(startBlock));
+      this.socket.write(Buffer.from(this.startOfBytes));
       this.socket.write(hl7Bytes);
-      const endBlock = [0x1c, 0x0d];
+      this.socket.write(Buffer.from(this.endOfBytes));
       this.socket.write(Buffer.from(endBlock));
     } catch (err) {
       log.error(`${this.logId} -> Error sending HL7 message: ${err.message}`);
